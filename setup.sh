@@ -97,6 +97,19 @@ install_oh_my_zsh() {
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
 
+# Function to install Zsh plugins
+install_zsh_plugins() {
+  echo "Installing Zsh plugins..."
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+  git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+}
+
+# Function to configure .zshrc for plugins
+configure_zshrc() {
+  echo "Configuring .zshrc..."
+  sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
+}
+
 # Function to install Vim
 install_vim() {
   echo "Installing Vim..."
@@ -144,7 +157,7 @@ install_docker() {
   sudo apt install -y docker-ce docker-ce-cli containerd.io
 
   # Add the current user to the Docker group to avoid using `sudo` with Docker commands
-  sudo usermod -aG docker $USER
+  sudo usermod -aG docker "$USER"
 
   echo "Docker installation complete! Please log out and log back in for group changes to take effect."
 }
@@ -164,8 +177,8 @@ install_qemu() {
   sudo systemctl start libvirtd
 
   # Add the current user to the libvirt and kvm groups
-  sudo usermod -aG libvirt $USER
-  sudo usermod -aG kvm $USER
+  sudo usermod -aG libvirt "$USER"
+  sudo usermod -aG kvm "$USER"
 
   echo "QEMU installation complete! Please log out and log back in for group changes to take effect."
 }
@@ -180,7 +193,11 @@ install_tool() {
 # Execute selected installations
 echo "Starting selected installations..."
 
-$install_ohmyzsh && install_oh_my_zsh
+if $install_ohmyzsh; then
+  install_oh_my_zsh
+  install_zsh_plugins
+  configure_zshrc
+fi
 $install_vim && install_vim
 $install_docker && install_docker
 $install_qemu && install_qemu
