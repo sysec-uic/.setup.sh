@@ -93,6 +93,7 @@ install_oh_my_zsh() {
     echo "Zsh not found, installing Zsh..."
     sudo apt update
     sudo apt install -y zsh
+    chsh -s $(which zsh)
   fi
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
@@ -100,14 +101,15 @@ install_oh_my_zsh() {
 # Function to install Zsh plugins
 install_zsh_plugins() {
   echo "Installing Zsh plugins..."
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
-  git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  git clone https://github.com/zsh-users/zsh-autosuggestions "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 }
 
 # Function to configure .zshrc for plugins
 configure_zshrc() {
   echo "Configuring .zshrc..."
   sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
+  sed -i 's/robbyrussell/bira/g' ~/.zshrc
 }
 
 # Function to install Vim
