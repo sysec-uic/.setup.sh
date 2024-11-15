@@ -1,0 +1,27 @@
+[alias]
+	br = branch
+	co = checkout
+	st = status
+    ci = commit
+    lg = log --oneline --graph --decorate
+
+[user]
+	email = {{default_email}}
+	name = {{default_name}}
+
+[core]
+	editor = vim
+
+[push]
+    default = simple
+
+[credential]
+	helper = store
+
+[pager]
+	branch = false
+
+[merge]
+	tool = meld
+[mergetool]
+	prompt = false

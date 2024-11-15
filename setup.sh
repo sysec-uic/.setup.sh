@@ -11,6 +11,7 @@ install_htop=false
 install_build_essential=false
 install_git=false
 install_curl=false
+
 install_ag=false
 install_exa=false
 install_gdb=false
@@ -140,6 +141,28 @@ EOF
   vim +PlugInstall +qall
 }
 
+setup_gitconfig() {
+  echo "Setting up .gitconfig..."
+
+  # Default values from the template
+  default_name="Xiaoguang Wang "
+  default_email="xjtuwxg@gmail.com"
+
+  # Prompt user for input with defaults
+  read -rp "Enter your Git user name [${default_name}]: " user_name
+  user_name=${user_name:-$default_name}
+
+  read -rp "Enter your Git user email [${default_email}]: " user_email
+  user_email=${user_email:-$default_email}
+
+  # Replace placeholders in the template
+  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" gitconfig.template > ~/.gitconfig
+
+  echo "Git configuration set up with:"
+  echo "  Name: ${user_name}"
+  echo "  Email: ${user_email}"
+}
+
 # Function to install Docker
 install_docker() {
   echo "Installing Docker..."
@@ -207,7 +230,7 @@ $install_qemu && install_qemu
 $install_tmux && install_tool "tmux"
 $install_htop && install_tool "htop"
 $install_build_essential && install_tool "build-essential"
-$install_git && install_tool "git"
+$install_git && install_tool "git" && setup_gitconfig
 $install_curl && install_tool "curl"
 $install_gdb && install_tool "gdb"
 $install_clang && install_tool "clang"
