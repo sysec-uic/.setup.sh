@@ -10,7 +10,7 @@ cd setup.sh
 ./setup.sh -o       # Install oh-my-zsh
 ```
 
-**Option 2:**
+**Option 2:** **[*Recommended*]**
 Directly execute this `setup.sh` script from GitHub using `curl`. The last flag `-h` indicate `help`, you can replace it with other flags, such as `-o` (install `oh-my-zsh`) or `-v` (install `vim`).
 ```
 curl -fsSL https://raw.githubusercontent.com/xgwang9/setup.sh/refs/heads/main/setup.sh | bash -s -- -h
