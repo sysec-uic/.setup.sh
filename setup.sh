@@ -31,10 +31,8 @@ show_help() {
   echo "  -o    Install Oh My Zsh (a popular Zsh configuration framework)"
   echo "  -v    Install Vim with a basic configuration and useful plugins"
   echo "  -t    Install tmux (terminal multiplexer for session management)"
-  echo "  -h, --help  Display this help message"
   echo "  -b    Install build-essential (gcc, g++, make, and other essential build tools)"
-  echo "  -g    Install Git (version control system)"
-  echo "  -c    Install cURL (command-line tool for data transfer)"
+  echo "  -g    Install Git (version control system) and a default config file"
   echo "  -s    Install The Silver Searcher (ag) (fast code search tool)"
   echo "  -x    Install exa (modern replacement for ls with enhanced features)"
   echo "  -G    Install GDB (GNU Debugger for debugging C/C++ programs)"
@@ -45,6 +43,7 @@ show_help() {
   echo "  -S    Install ShellCheck (linter for shell scripts)"
   echo "  -r    Install ripgrep (rg) (fast file search tool)"
   echo "  -q    Install QEMU (system virtualization)"
+  echo "  -h, --help  Display this help message"
   echo ""
   echo "Example: setup.sh -o -v -t -g"
   echo "This will install Oh My Zsh, Vim, tmux, and Git."
@@ -94,7 +93,7 @@ install_oh_my_zsh() {
     echo "Zsh not found, installing Zsh..."
     sudo apt update
     sudo apt install -y zsh
-    chsh -s $(which zsh)
+    chsh -s "$(which zsh)"
   fi
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
