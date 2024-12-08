@@ -102,8 +102,8 @@ install_oh_my_zsh() {
 # Function to install Zsh plugins
 install_zsh_plugins() {
   echo "Installing Zsh plugins..."
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
-  git clone https://github.com/zsh-users/zsh-autosuggestions "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+  git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 }
 
 # Function to configure .zshrc for plugins
