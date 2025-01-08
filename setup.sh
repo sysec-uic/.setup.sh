@@ -89,16 +89,16 @@ done
 # Function to check if the user's password is set
 check_password() {
     # Get the status of the current user's password
-    USER_STATUS=$(passwd --status $(whoami) | awk '{print $2}')
+    USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
 
     # If no password is set, prompt the user to set one
     if [[ "$USER_STATUS" == "NP" ]]; then
         echo "No password is set for the user $(whoami)."
         echo "Please set a password to continue."
-        sudo passwd $(whoami)
+        sudo passwd "$(whoami)"
 
         # Recheck the password status after setting it
-        USER_STATUS=$(passwd --status $(whoami) | awk '{print $2}')
+        USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
         if [[ "$USER_STATUS" == "NP" ]]; then
             echo "Failed to set a password. Exiting."
             exit 1
