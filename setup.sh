@@ -119,36 +119,7 @@ install_vim() {
   curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-  cat << EOF > ~/.vimrc
-set number
-set relativenumber
-
-syntax on
-set tabstop=4
-set shiftwidth=4
-set expandtab
-set autoindent
-set ruler
-set clipboard=unnamedplus
-set cursorline
-
-set colorcolumn=80
-set textwidth=80
-set tw=79
-
-call plug#begin('~/.vim/plugged')
-Plug 'tpope/vim-sensible'
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
-Plug 'preservim/nerdtree'
-Plug 'dr-kino/cscope-maps'
-Plug 'farmergreg/vim-lastplace'
-Plug 'vivien/vim-linux-coding-style'
-Plug 'ycm-core/YouCompleteMe', { 'do': './install.py' }
-call plug#end()
-
-map <C-n> :NERDTreeToggle<CR>
-EOF
+  cp .vimrc ~/.vimrc
   vim +PlugInstall +qall
 }
 
