@@ -138,7 +138,7 @@ setup_gitconfig() {
   user_email=${user_email:-$default_email}
 
   # Replace placeholders in the template
-  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" gitconfig.template > ~/.gitconfig
+  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" .gitconfig.template > ~/.gitconfig
 
   echo "Git configuration set up with:"
   echo "  Name: ${user_name}"
