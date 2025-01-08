@@ -86,9 +86,31 @@ while getopts "ovtbhbgcsxGCVDnSrq-:" opt; do
   esac
 done
 
+# Function to check if the user's password is set
+check_password() {
+    # Get the status of the current user's password
+    USER_STATUS=$(passwd --status $(whoami) | awk '{print $2}')
+
+    # If no password is set, prompt the user to set one
+    if [[ "$USER_STATUS" == "NP" ]]; then
+        echo "No password is set for the user $(whoami)."
+        echo "Please set a password to continue."
+        sudo passwd $(whoami)
+
+        # Recheck the password status after setting it
+        USER_STATUS=$(passwd --status $(whoami) | awk '{print $2}')
+        if [[ "$USER_STATUS" == "NP" ]]; then
+            echo "Failed to set a password. Exiting."
+            exit 1
+        fi
+    fi
+}
+
 # Function to install Oh My Zsh
 install_oh_my_zsh() {
   echo "Installing Oh My Zsh..."
+  check_password  # Check password before proceeding
+
   if ! command -v zsh &> /dev/null; then
     echo "Zsh not found, installing Zsh..."
     sudo apt update
@@ -148,6 +170,7 @@ setup_gitconfig() {
 # Function to install Docker
 install_docker() {
   echo "Installing Docker..."
+  check_password  # Check password before proceeding
 
   # Update package index and install prerequisites
   sudo apt update
