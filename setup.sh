@@ -115,7 +115,7 @@ configure_zshrc() {
 # Function to install Vim
 install_vim() {
   echo "Installing Vim..."
-  sudo apt install -y vim python3-dev
+  sudo apt install -y vim python3-dev cmake
   curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
