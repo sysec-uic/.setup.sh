@@ -2,8 +2,8 @@
 	br = branch
 	co = checkout
 	st = status
-    ci = commit
-    lg = log --oneline --graph --decorate
+	ci = commit
+	lg = log --oneline --graph --decorate
 
 [user]
 	email = {{default_email}}
