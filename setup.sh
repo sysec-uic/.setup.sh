@@ -91,19 +91,26 @@ check_password() {
     # Get the status of the current user's password
     USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
 
-    # If no password is set, prompt the user to set one
+    # Check for password status and handle accordingly
     if [[ "$USER_STATUS" == "NP" ]]; then
         echo "No password is set for the user $(whoami)."
         echo "Please set a password to continue."
         sudo passwd "$(whoami)"
-
-        # Recheck the password status after setting it
-        USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
-        if [[ "$USER_STATUS" == "NP" ]]; then
-            echo "Failed to set a password. Exiting."
-            exit 1
-        fi
+    elif [[ "$USER_STATUS" == "L" ]]; then
+        echo "The password for the user $(whoami) is locked."
+        echo "Unlocking the password. You will need to set a new password."
+        sudo passwd -u "$(whoami)"  # Unlock the password
+        sudo passwd "$(whoami)"    # Prompt to set a new password
     fi
+
+    # Recheck the password status after any changes
+    USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
+    if [[ "$USER_STATUS" != "P" ]]; then
+        echo "Failed to set or unlock the password. Exiting."
+        exit 1
+    fi
+
+    echo "Password is properly set and active for the user $(whoami)."
 }
 
 # Function to install Oh My Zsh
