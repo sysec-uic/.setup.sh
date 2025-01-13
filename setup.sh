@@ -122,7 +122,6 @@ install_oh_my_zsh() {
     echo "Zsh not found, installing Zsh..."
     sudo apt update
     sudo apt install -y zsh
-    chsh -s "$(which zsh)"
   fi
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
@@ -139,6 +138,20 @@ configure_zshrc() {
   echo "Configuring .zshrc..."
   sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
   sed -i 's/robbyrussell/bira/g' ~/.zshrc
+}
+
+# Function to change the default shell to Zsh
+change_default_shell_to_zsh() {
+  echo "Changing default shell to Zsh..."
+  sudo chsh -s "$(which zsh)" "$(whoami)"
+
+  # Verify the shell change
+  CURRENT_SHELL=$(getent passwd "$(whoami)" | cut -d: -f7)
+  if [[ "$CURRENT_SHELL" != "$(which zsh)" ]]; then
+    echo "Failed to set Zsh as the default shell. Exiting."
+    exit 1
+  fi
+  echo "Zsh is now the default shell. Restart your terminal or run 'zsh' to start using it."
 }
 
 # Function to install Vim
@@ -234,6 +247,7 @@ if $install_ohmyzsh; then
   install_oh_my_zsh
   install_zsh_plugins
   configure_zshrc
+  change_default_shell_to_zsh
 fi
 $install_vim && install_vim
 $install_docker && install_docker
