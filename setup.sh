@@ -178,9 +178,21 @@ setup_gitconfig() {
   # Define the GitHub URL for the .gitconfig.template file
   TEMPLATE_URL="https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.gitconfig.template"
 
-  # Prompt user for Git name and email
-  # Default values from the template
-  default_name="Xiaoguang Wang "
+  # Check if .gitconfig.template exists locally
+  if [ -f .gitconfig.template ]; then
+    echo "Using local .gitconfig.template file."
+    TEMPLATE_SOURCE=".gitconfig.template"
+  else
+    echo "Downloading .gitconfig.template from GitHub..."
+    TEMPLATE_SOURCE=$(curl -fsSL "$TEMPLATE_URL")
+    if [[ $? -ne 0 || -z "$TEMPLATE_SOURCE" ]]; then
+      echo "Failed to download .gitconfig.template. Exiting."
+      exit 1
+    fi
+  fi
+
+  # Default values for Git name and email
+  default_name="Xiaoguang Wang"
   default_email="xjtuwxg@gmail.com"
 
   # Prompt user for input with defaults
@@ -190,12 +202,19 @@ setup_gitconfig() {
   read -rp "Enter your Git user email [${default_email}]: " user_email
   user_email=${user_email:-$default_email}
 
-  # Replace placeholders in the template
-  #sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" .gitconfig.template > ~/.gitconfig
+  # Escape special characters in user_name and user_email for sed
+  escaped_user_name=$(printf '%s\n' "$user_name" | sed 's/[&/\]/\\&/g')
+  escaped_user_email=$(printf '%s\n' "$user_email" | sed 's/[&/\]/\\&/g')
 
-  # Stream the template directly from the URL and process it with sed
-  curl -fsSL "$TEMPLATE_URL" | \
-  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" > ~/.gitconfig
+  # Process the template and save to ~/.gitconfig
+  if [ "$TEMPLATE_SOURCE" = ".gitconfig.template" ]; then
+    # Use local file
+    sed "s/{{default_name}}/${escaped_user_name}/; s/{{default_email}}/${escaped_user_email}/" "$TEMPLATE_SOURCE" > ~/.gitconfig
+  else
+    # Use downloaded content
+    echo "$TEMPLATE_SOURCE" | \
+    sed "s/{{default_name}}/${escaped_user_name}/; s/{{default_email}}/${escaped_user_email}/" > ~/.gitconfig
+  fi
 
   # Check for errors
   if [[ $? -ne 0 ]]; then
