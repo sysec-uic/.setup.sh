@@ -161,13 +161,24 @@ install_vim() {
   curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-  cp .vimrc ~/.vimrc
+  # Backup existing .vimrc if it exists
+  if [ -f "${HOME}/.vimrc" ]; then
+    echo "Backing up existing .vimrc to .vimrc.bak"
+    mv "${HOME}/.vimrc" "${HOME}/.vimrc.bak"
+  fi
+  #cp .vimrc ~/.vimrc
+  wget -qO "${HOME}/.vimrc" https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.vimrc
+
   vim +PlugInstall +qall
 }
 
 setup_gitconfig() {
   echo "Setting up .gitconfig..."
 
+  # Define the GitHub URL for the .gitconfig.template file
+  TEMPLATE_URL="https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.gitconfig.template"
+
+  # Prompt user for Git name and email
   # Default values from the template
   default_name="Xiaoguang Wang "
   default_email="xjtuwxg@gmail.com"
@@ -180,7 +191,17 @@ setup_gitconfig() {
   user_email=${user_email:-$default_email}
 
   # Replace placeholders in the template
-  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" .gitconfig.template > ~/.gitconfig
+  #sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" .gitconfig.template > ~/.gitconfig
+
+  # Stream the template directly from the URL and process it with sed
+  curl -fsSL "$TEMPLATE_URL" | \
+  sed "s/{{default_name}}/${user_name}/; s/{{default_email}}/${user_email}/" > ~/.gitconfig
+
+  # Check for errors
+  if [[ $? -ne 0 ]]; then
+    echo "Failed to set up .gitconfig. Exiting."
+    exit 1
+  fi
 
   echo "Git configuration set up with:"
   echo "  Name: ${user_name}"

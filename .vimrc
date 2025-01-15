@@ -95,7 +95,7 @@ Plug 'airblade/vim-gitgutter'    " Git diff signs in the gutter
 Plug 'vim-airline/vim-airline'   " Status line
 Plug 'vivien/vim-linux-coding-style'
 Plug 'dr-kino/cscope-maps'
-Plug 'ycm-core/YouCompleteMe', { 'do': './install.py' }
+"Plug 'ycm-core/YouCompleteMe', { 'do': './install.py' }
 
 call plug#end()
 
