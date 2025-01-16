@@ -100,7 +100,7 @@ Plug 'dr-kino/cscope-maps'
 call plug#end()
 
 " NERDTree keybinding
-nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-r> :NERDTreeToggle<CR>
 
 " Airline themes (optional)
 let g:airline_theme = 'dark'
