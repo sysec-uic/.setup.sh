@@ -7,7 +7,7 @@ sudo apt-get update -y
 sudo apt install -y git curl
 ```
 
-**Option 1:** Clone and Run Locally
+**Option 1:** Clone and Run Locally (recommended)
 
 Execute the `setup.sh` script locally:
 ```
