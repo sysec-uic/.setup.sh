@@ -4,6 +4,7 @@ A ChatGPT-generated script to set up essential tools like `vim`, `oh-my-zsh`, `g
 Before running the script, ensure your package list is up-to-date by executing:
 ```
 sudo apt-get update -y
+sudo apt install -y git curl
 ```
 
 **Option 1:** Clone and Run Locally
