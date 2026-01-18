@@ -51,11 +51,15 @@ detect_distro() {
   if [ -f /etc/os-release ]; then
     # shellcheck disable=SC1091
     . /etc/os-release
-    case "${ID}" in
-      ubuntu|debian) echo "debian" ;;
-      arch) echo "arch" ;;
-      *) echo "unsupported" ;;
-    esac
+    if [ "${ID}" = "ubuntu" ] || [ "${ID}" = "debian" ]; then
+      echo "debian"
+    elif [ "${ID}" = "arch" ] || [ "${ID}" = "archlinux" ] || echo "${ID_LIKE}" | grep -qi arch; then
+      echo "arch"
+    else
+      echo "unsupported"
+    fi
+  elif command -v uname >/dev/null 2>&1 && [ "$(uname -s)" = "Linux" ]; then
+    echo "unsupported"
   else
     echo "unsupported"
   fi

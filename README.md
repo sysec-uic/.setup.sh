@@ -11,11 +11,13 @@ cd .setup.sh
 ./setup.sh -o       # Install oh-my-zsh
 ```
 
-**Option 2:** Run Directly via curl
+**Option 2:** Run Directly via curl (uses `bash`)
 
 You can execute the script directly from GitHub without cloning the repository. Replace the last flag (`-h`) with the desired option:
 ```
 curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -h
+```
+If you see `sudo: apt: command not found` on Arch, ensure you are pulling the latest script and that `/etc/os-release` reports `ID=arch` (or `ID_LIKE` includes `arch`).
 ```
 
 ## Flags
