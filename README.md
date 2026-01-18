@@ -1,27 +1,26 @@
 # .setup.sh
 A script to set up essential tools like `vim`, `oh-my-zsh`, `git`, and more on **Ubuntu/Debian** and **Arch Linux**.
 
-**Option 1:** Clone and Run Locally (recommended)
+**Option 1:** Clone and Run Locally (**recommended**)
 
 Execute the `setup.sh` script locally:
 ```
 git clone https://github.com/sysec-uic/.setup.sh.git
 cd .setup.sh
 ./setup.sh -h       # Show help
-./setup.sh -o       # Install oh-my-zsh
+./setup.sh -oH      # Install oh-my-zsh and htop (see Flags below)
 ```
 
-**Option 2:** Run Directly via curl (uses `bash`)
+**Option 2:** Run Directly via curl (some tools like `git` and `vim` may not work properly)
 
 You can execute the script directly from GitHub without cloning the repository. Replace the last flag (`-h`) with the desired option. For non-interactive shells, add `-y`:
 ```
 curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -h
 curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -y -r
 ```
-If you see `sudo: apt: command not found` on Arch, ensure you are pulling the latest script and that `/etc/os-release` reports `ID=arch` (or `ID_LIKE` includes `arch`).
-```
 
 ## Flags
+```
 - `-h`, `--help`: Show help.
 - `--dry-run`: Print planned actions without making changes.
 - `-y`, `--yes`: Skip confirmation prompts (defaults to Yes when prompted).
@@ -43,11 +42,11 @@ If you see `sudo: apt: command not found` on Arch, ensure you are pulling the la
 - `-q`: Install QEMU.
 - `--git-name <name>`: Set `git config user.name` (useful for non-interactive runs).
 - `--git-email <email>`: Set `git config user.email` (useful for non-interactive runs).
+```
 
 ## Arch Linux Notes
 - Some packages use Arch names: `build-essential` maps to `base-devel`, `silversearcher-ag` to `the_silver_searcher`, and `exa` to `eza`.
 - Docker is installed from the Arch repos and the service is enabled automatically.
-- The script will install `which` and `wget` automatically if they are missing.
 
 ## Prerequisites
 - The script will install `which`, `git`, `wget`, and `curl` automatically if they are missing.
