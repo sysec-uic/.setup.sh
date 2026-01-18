@@ -1,16 +1,5 @@
 # .setup.sh
-A script to set up essential tools like `vim`, `oh-my-zsh`, `git`, and more on Ubuntu/Debian and Arch Linux.
-
-Before running the script, ensure your package list is up-to-date by executing:
-```
-sudo apt-get update -y
-sudo apt install -y git curl
-```
-On Arch:
-```
-sudo pacman -Syu
-sudo pacman -S git curl
-```
+A script to set up essential tools like `vim`, `oh-my-zsh`, `git`, and more on **Ubuntu/Debian** and **Arch Linux**.
 
 **Option 1:** Clone and Run Locally (recommended)
 
@@ -54,3 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main
 ## Arch Linux Notes
 - Some packages use Arch names: `build-essential` maps to `base-devel`, `silversearcher-ag` to `the_silver_searcher`, and `exa` to `eza`.
 - Docker is installed from the Arch repos and the service is enabled automatically.
+- The script will install `which` and `wget` automatically if they are missing.
+
+## Prerequisites
+- The script will install `which`, `git`, `wget`, and `curl` automatically if they are missing.

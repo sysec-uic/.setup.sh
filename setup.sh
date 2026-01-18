@@ -221,6 +221,21 @@ ensure_selection() {
   fi
 }
 
+ensure_prereqs() {
+  local missing=()
+
+  command -v which >/dev/null 2>&1 || missing+=("which")
+  command -v git >/dev/null 2>&1 || missing+=("git")
+  command -v wget >/dev/null 2>&1 || missing+=("wget")
+  command -v curl >/dev/null 2>&1 || missing+=("curl")
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    info "Installing prerequisites: ${missing[*]}"
+    pkg_update
+    pkg_install "${missing[@]}"
+  fi
+}
+
 # Function to check if the user's password is set
 check_password() {
     if $dry_run; then
@@ -474,6 +489,7 @@ if $dry_run; then
 fi
 ensure_selection
 confirm_or_exit
+ensure_prereqs
 
 if $install_ohmyzsh; then
   install_oh_my_zsh
