@@ -140,9 +140,13 @@ while getopts "ovtbgcHsxGCVDnSrqyh-:" opt; do
         dry_run=true
       elif [[ "$OPTARG" == "yes" ]]; then
         assume_yes=true
+      elif [[ "$OPTARG" == git-name=* ]]; then
+        git_name_override="${OPTARG#git-name=}"
       elif [[ "$OPTARG" == "git-name" ]]; then
         git_name_override="${!OPTIND}"
         OPTIND=$((OPTIND + 1))
+      elif [[ "$OPTARG" == git-email=* ]]; then
+        git_email_override="${OPTARG#git-email=}"
       elif [[ "$OPTARG" == "git-email" ]]; then
         git_email_override="${!OPTIND}"
         OPTIND=$((OPTIND + 1))
