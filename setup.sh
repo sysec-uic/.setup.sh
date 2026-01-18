@@ -23,8 +23,6 @@ install_ripgrep=false
 install_qemu=false
 dry_run=false
 assume_yes=false
-git_name_override=""
-git_email_override=""
 
 # Terminal colors (fallback to no color if not supported)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
@@ -97,8 +95,6 @@ show_help() {
   echo "  -q    Install ${COLOR_GREEN}QEMU${COLOR_RESET} (system virtualization)"
   echo "  -y, --yes  Skip confirmation prompts"
   echo "  --dry-run  Print actions without making changes"
-  echo "  --git-name <name>   Override Git user.name (non-interactive friendly)"
-  echo "  --git-email <email> Override Git user.email (non-interactive friendly)"
   echo "  -h, --help  Display this help message"
   echo ""
   echo "${COLOR_BOLD}Example:${COLOR_RESET} setup.sh -o -v -t -g"
@@ -137,16 +133,6 @@ while getopts "ovtbgHsxGCVDnSrqyh-:" opt; do
         dry_run=true
       elif [[ "$OPTARG" == "yes" ]]; then
         assume_yes=true
-      elif [[ "$OPTARG" == git-name=* ]]; then
-        git_name_override="${OPTARG#git-name=}"
-      elif [[ "$OPTARG" == "git-name" ]]; then
-        git_name_override="${!OPTIND}"
-        OPTIND=$((OPTIND + 1))
-      elif [[ "$OPTARG" == git-email=* ]]; then
-        git_email_override="${OPTARG#git-email=}"
-      elif [[ "$OPTARG" == "git-email" ]]; then
-        git_email_override="${!OPTIND}"
-        OPTIND=$((OPTIND + 1))
       else
         echo "Invalid option: --$OPTARG"
         exit 1
@@ -387,9 +373,7 @@ setup_gitconfig() {
   default_name="Xiaoguang Wang"
   default_email="xjtuwxg@gmail.com"
 
-  if [ -n "$git_name_override" ]; then
-    user_name=$git_name_override
-  elif [ ! -t 0 ]; then
+  if [ ! -t 0 ]; then
     warn "No interactive input detected; using default Git name."
     user_name=$default_name
   else
@@ -398,9 +382,7 @@ setup_gitconfig() {
     user_name=${user_name:-$default_name}
   fi
 
-  if [ -n "$git_email_override" ]; then
-    user_email=$git_email_override
-  elif [ ! -t 0 ]; then
+  if [ ! -t 0 ]; then
     warn "No interactive input detected; using default Git email."
     user_email=$default_email
   else

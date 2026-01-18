@@ -40,8 +40,6 @@ curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main
 - `-S`: Install `shellcheck`.
 - `-r`: Install `ripgrep`.
 - `-q`: Install QEMU.
-- `--git-name <name>`: Set `git config user.name` (useful for non-interactive runs).
-- `--git-email <email>`: Set `git config user.email` (useful for non-interactive runs).
 ```
 
 ## Arch Linux Notes
@@ -50,4 +48,4 @@ curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main
 
 ## Prerequisites
 - The script will install `which`, `git`, `wget`, and `curl` automatically if they are missing.
-- When running non-interactively (e.g., via `curl | bash`), Git config uses the default name/email unless you pass `--git-name` and `--git-email`.
+- When running non-interactively (e.g., via `curl | bash`), Git config uses the default name/email.
