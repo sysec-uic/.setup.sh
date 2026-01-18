@@ -30,7 +30,6 @@ If you see `sudo: apt: command not found` on Arch, ensure you are pulling the la
 - `-t`: Install `tmux`.
 - `-b`: Install `build-essential`.
 - `-g`: Install `git` and a default `.gitconfig`.
-- `-c`: Install `curl`.
 - `-H`: Install `htop`.
 - `-s`: Install `silversearcher-ag`.
 - `-x`: Install `exa`.

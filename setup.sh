@@ -10,7 +10,6 @@ install_tmux=false
 install_htop=false
 install_build_essential=false
 install_git=false
-install_curl=false
 
 install_ag=false
 install_exa=false
@@ -85,7 +84,6 @@ show_help() {
   echo "  -t    Install tmux (terminal multiplexer for session management)"
   echo "  -b    Install build-essential (gcc, g++, make, and other essential build tools)"
   echo "  -g    Install Git (version control system) and a default config file"
-  echo "  -c    Install curl (command-line data transfer tool)"
   echo "  -H    Install htop (interactive process viewer)"
   echo "  -s    Install The Silver Searcher (ag) (fast code search tool)"
   echo "  -x    Install exa (modern replacement for ls with enhanced features)"
@@ -108,7 +106,7 @@ show_help() {
 }
 
 # Parse options
-while getopts "ovtbgcHsxGCVDnSrqyh-:" opt; do
+while getopts "ovtbgHsxGCVDnSrqyh-:" opt; do
   case ${opt} in
     o ) install_ohmyzsh=true ;;
     v ) install_vim=true ;;
@@ -119,7 +117,6 @@ while getopts "ovtbgcHsxGCVDnSrqyh-:" opt; do
       ;;
     b ) install_build_essential=true ;;
     g ) install_git=true ;;
-    c ) install_curl=true ;;
     H ) install_htop=true ;;
     s ) install_ag=true ;;
     x ) install_exa=true ;;
@@ -218,7 +215,6 @@ list_selected_tools() {
   $install_htop && items+=("htop")
   $install_build_essential && items+=("build-essential")
   $install_git && items+=("git")
-  $install_curl && items+=("curl")
   $install_ag && items+=("silversearcher-ag")
   $install_exa && items+=("exa")
   $install_gdb && items+=("gdb")
@@ -234,7 +230,7 @@ list_selected_tools() {
 
 ensure_selection() {
   if ! $install_ohmyzsh && ! $install_vim && ! $install_tmux && ! $install_htop \
-    && ! $install_build_essential && ! $install_git && ! $install_curl \
+    && ! $install_build_essential && ! $install_git \
     && ! $install_ag && ! $install_exa && ! $install_gdb && ! $install_clang \
     && ! $install_valgrind && ! $install_docker && ! $install_ncdu \
     && ! $install_shellcheck && ! $install_ripgrep && ! $install_qemu; then
@@ -541,7 +537,6 @@ $install_tmux && install_tool "tmux"
 $install_htop && install_tool "htop"
 $install_build_essential && install_tool "build-essential"
 $install_git && install_tool "git" && setup_gitconfig
-$install_curl && install_tool "curl"
 $install_gdb && install_tool "gdb"
 $install_clang && install_tool "clang"
 $install_ncdu && install_tool "ncdu"
