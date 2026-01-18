@@ -13,9 +13,10 @@ cd .setup.sh
 
 **Option 2:** Run Directly via curl (uses `bash`)
 
-You can execute the script directly from GitHub without cloning the repository. Replace the last flag (`-h`) with the desired option:
+You can execute the script directly from GitHub without cloning the repository. Replace the last flag (`-h`) with the desired option. For non-interactive shells, add `-y`:
 ```
 curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -h
+curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -y -r
 ```
 If you see `sudo: apt: command not found` on Arch, ensure you are pulling the latest script and that `/etc/os-release` reports `ID=arch` (or `ID_LIKE` includes `arch`).
 ```
@@ -41,6 +42,8 @@ If you see `sudo: apt: command not found` on Arch, ensure you are pulling the la
 - `-S`: Install `shellcheck`.
 - `-r`: Install `ripgrep`.
 - `-q`: Install QEMU.
+- `--git-name <name>`: Set `git config user.name` (useful for non-interactive runs).
+- `--git-email <email>`: Set `git config user.email` (useful for non-interactive runs).
 
 ## Arch Linux Notes
 - Some packages use Arch names: `build-essential` maps to `base-devel`, `silversearcher-ag` to `the_silver_searcher`, and `exa` to `eza`.
@@ -49,3 +52,4 @@ If you see `sudo: apt: command not found` on Arch, ensure you are pulling the la
 
 ## Prerequisites
 - The script will install `which`, `git`, `wget`, and `curl` automatically if they are missing.
+- When running non-interactively (e.g., via `curl | bash`), Git config uses the default name/email unless you pass `--git-name` and `--git-email`.
