@@ -22,6 +22,8 @@ install_ncdu=false
 install_shellcheck=false
 install_ripgrep=false
 install_qemu=false
+dry_run=false
+assume_yes=false
 
 # Function to display help information
 show_help() {
@@ -33,6 +35,8 @@ show_help() {
   echo "  -t    Install tmux (terminal multiplexer for session management)"
   echo "  -b    Install build-essential (gcc, g++, make, and other essential build tools)"
   echo "  -g    Install Git (version control system) and a default config file"
+  echo "  -c    Install curl (command-line data transfer tool)"
+  echo "  -H    Install htop (interactive process viewer)"
   echo "  -s    Install The Silver Searcher (ag) (fast code search tool)"
   echo "  -x    Install exa (modern replacement for ls with enhanced features)"
   echo "  -G    Install GDB (GNU Debugger for debugging C/C++ programs)"
@@ -43,6 +47,8 @@ show_help() {
   echo "  -S    Install ShellCheck (linter for shell scripts)"
   echo "  -r    Install ripgrep (rg) (fast file search tool)"
   echo "  -q    Install QEMU (system virtualization)"
+  echo "  -y, --yes  Skip confirmation prompts"
+  echo "  --dry-run  Print actions without making changes"
   echo "  -h, --help  Display this help message"
   echo ""
   echo "Example: setup.sh -o -v -t -g"
@@ -50,7 +56,7 @@ show_help() {
 }
 
 # Parse options
-while getopts "ovtbhbgcsxGCVDnSrq-:" opt; do
+while getopts "ovtbgcHsxGCVDnSrqyh-:" opt; do
   case ${opt} in
     o ) install_ohmyzsh=true ;;
     v ) install_vim=true ;;
@@ -62,6 +68,7 @@ while getopts "ovtbhbgcsxGCVDnSrq-:" opt; do
     b ) install_build_essential=true ;;
     g ) install_git=true ;;
     c ) install_curl=true ;;
+    H ) install_htop=true ;;
     s ) install_ag=true ;;
     x ) install_exa=true ;;
     G ) install_gdb=true ;;
@@ -72,10 +79,15 @@ while getopts "ovtbhbgcsxGCVDnSrq-:" opt; do
     S ) install_shellcheck=true ;;
     r ) install_ripgrep=true ;;
     q ) install_qemu=true ;;
+    y ) assume_yes=true ;;
     - ) 
       if [[ "$OPTARG" == "help" ]]; then
         show_help
         exit 0
+      elif [[ "$OPTARG" == "dry-run" ]]; then
+        dry_run=true
+      elif [[ "$OPTARG" == "yes" ]]; then
+        assume_yes=true
       else
         echo "Invalid option: --$OPTARG"
         exit 1
@@ -86,8 +98,42 @@ while getopts "ovtbhbgcsxGCVDnSrq-:" opt; do
   esac
 done
 
+confirm_or_exit() {
+  if $assume_yes; then
+    return 0
+  fi
+  read -rp "Proceed with selected installations? [y/N]: " confirm
+  case "$confirm" in
+    [yY][eE][sS]|[yY]) return 0 ;;
+    *) echo "Aborted."; exit 1 ;;
+  esac
+}
+
+run_cmd() {
+  if $dry_run; then
+    echo "+ $*"
+    return 0
+  fi
+  "$@"
+}
+
+ensure_selection() {
+  if ! $install_ohmyzsh && ! $install_vim && ! $install_tmux && ! $install_htop \
+    && ! $install_build_essential && ! $install_git && ! $install_curl \
+    && ! $install_ag && ! $install_exa && ! $install_gdb && ! $install_clang \
+    && ! $install_valgrind && ! $install_docker && ! $install_ncdu \
+    && ! $install_shellcheck && ! $install_ripgrep && ! $install_qemu; then
+    echo "No install options selected. Use -h for help."
+    exit 1
+  fi
+}
+
 # Function to check if the user's password is set
 check_password() {
+    if $dry_run; then
+        echo "Dry run: skipping password checks."
+        return 0
+    fi
     # Get the status of the current user's password
     USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
 
@@ -120,30 +166,34 @@ install_oh_my_zsh() {
 
   if ! command -v zsh &> /dev/null; then
     echo "Zsh not found, installing Zsh..."
-    sudo apt update
-    sudo apt install -y zsh
+    run_cmd sudo apt update
+    run_cmd sudo apt install -y zsh
   fi
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  if $dry_run; then
+    echo "+ curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh -s -- --unattended"
+  else
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  fi
 }
 
 # Function to install Zsh plugins
 install_zsh_plugins() {
   echo "Installing Zsh plugins..."
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-  git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+  run_cmd git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+  run_cmd git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 }
 
 # Function to configure .zshrc for plugins
 configure_zshrc() {
   echo "Configuring .zshrc..."
-  sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
-  sed -i 's/robbyrussell/bira/g' ~/.zshrc
+  run_cmd sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
+  run_cmd sed -i 's/robbyrussell/bira/g' ~/.zshrc
 }
 
 # Function to change the default shell to Zsh
 change_default_shell_to_zsh() {
   echo "Changing default shell to Zsh..."
-  sudo chsh -s "$(which zsh)" "$(whoami)"
+  run_cmd sudo chsh -s "$(which zsh)" "$(whoami)"
 
   # Verify the shell change
   CURRENT_SHELL=$(getent passwd "$(whoami)" | cut -d: -f7)
@@ -157,23 +207,31 @@ change_default_shell_to_zsh() {
 # Function to install Vim
 install_vim() {
   echo "Installing Vim..."
-  sudo apt install -y vim python3-dev cmake
-  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  run_cmd sudo apt install -y vim python3-dev cmake
+  run_cmd curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
   # Backup existing .vimrc if it exists
   if [ -f "${HOME}/.vimrc" ]; then
     echo "Backing up existing .vimrc to .vimrc.bak"
-    mv "${HOME}/.vimrc" "${HOME}/.vimrc.bak"
+    run_cmd mv "${HOME}/.vimrc" "${HOME}/.vimrc.bak"
   fi
   #cp .vimrc ~/.vimrc
-  wget -qO "${HOME}/.vimrc" https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.vimrc
+  run_cmd wget -qO "${HOME}/.vimrc" https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.vimrc
 
-  vim +PlugInstall +qall
+  if $dry_run; then
+    echo "+ vim +PlugInstall +qall"
+  else
+    vim +PlugInstall +qall
+  fi
 }
 
 setup_gitconfig() {
   echo "Setting up .gitconfig..."
+  if $dry_run; then
+    echo "Dry run: skipping .gitconfig setup."
+    return 0
+  fi
 
   # Define the GitHub URL for the .gitconfig.template file
   TEMPLATE_URL="https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/.gitconfig.template"
@@ -233,21 +291,29 @@ install_docker() {
   check_password  # Check password before proceeding
 
   # Update package index and install prerequisites
-  sudo apt update
-  sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+  run_cmd sudo apt update
+  run_cmd sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 
   # Add Docker’s official GPG key
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  if $dry_run; then
+    echo "+ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+  else
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  fi
 
   # Set up the stable repository
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  if $dry_run; then
+    echo "+ echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list"
+  else
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  fi
 
   # Update the package index again and install Docker
-  sudo apt update
-  sudo apt install -y docker-ce docker-ce-cli containerd.io
+  run_cmd sudo apt update
+  run_cmd sudo apt install -y docker-ce docker-ce-cli containerd.io
 
   # Add the current user to the Docker group to avoid using `sudo` with Docker commands
-  sudo usermod -aG docker "$USER"
+  run_cmd sudo usermod -aG docker "$USER"
 
   echo "Docker installation complete! Please log out and log back in for group changes to take effect."
 }
@@ -257,18 +323,18 @@ install_qemu() {
   echo "Installing QEMU and related packages..."
 
   # Update package list
-  sudo apt update
+  run_cmd sudo apt update
   
   # Install QEMU and virtualization tools
-  sudo apt install -y qemu qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+  run_cmd sudo apt install -y qemu qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
 
   # Enable and start the libvirtd service for managing virtual machines
-  sudo systemctl enable libvirtd
-  sudo systemctl start libvirtd
+  run_cmd sudo systemctl enable libvirtd
+  run_cmd sudo systemctl start libvirtd
 
   # Add the current user to the libvirt and kvm groups
-  sudo usermod -aG libvirt "$USER"
-  sudo usermod -aG kvm "$USER"
+  run_cmd sudo usermod -aG libvirt "$USER"
+  run_cmd sudo usermod -aG kvm "$USER"
 
   echo "QEMU installation complete! Please log out and log back in for group changes to take effect."
 }
@@ -277,11 +343,16 @@ install_qemu() {
 install_tool() {
   local tool_name=$1
   echo "Installing ${tool_name}..."
-  sudo apt install -y "${tool_name}"
+  run_cmd sudo apt install -y "${tool_name}"
 }
 
 # Execute selected installations
 echo "Starting selected installations..."
+if $dry_run; then
+  echo "Dry run enabled: no changes will be made."
+fi
+ensure_selection
+confirm_or_exit
 
 if $install_ohmyzsh; then
   install_oh_my_zsh

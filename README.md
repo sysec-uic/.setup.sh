@@ -1,5 +1,5 @@
 # .setup.sh
-A ChatGPT-generated script to set up essential tools like `vim`, `oh-my-zsh`, `git`, and more on Ubuntu machines.
+A script to set up essential tools like `vim`, `oh-my-zsh`, `git`, and more on Ubuntu machines.
 
 Before running the script, ensure your package list is up-to-date by executing:
 ```
@@ -23,7 +23,25 @@ You can execute the script directly from GitHub without cloning the repository. 
 ```
 curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main/setup.sh | bash -s -- -h
 ```
-Flags:
--	`-h`: Show help.
--	`-o`: Install `oh-my-zsh`.
--	`-v`: Install `vim`.
+
+## Flags
+- `-h`, `--help`: Show help.
+- `--dry-run`: Print planned actions without making changes.
+- `-y`, `--yes`: Skip confirmation prompts.
+- `-o`: Install `oh-my-zsh`.
+- `-v`: Install `vim`.
+- `-t`: Install `tmux`.
+- `-b`: Install `build-essential`.
+- `-g`: Install `git` and a default `.gitconfig`.
+- `-c`: Install `curl`.
+- `-H`: Install `htop`.
+- `-s`: Install `silversearcher-ag`.
+- `-x`: Install `exa`.
+- `-G`: Install `gdb`.
+- `-C`: Install `clang`.
+- `-V`: Install `valgrind`.
+- `-D`: Install Docker.
+- `-n`: Install `ncdu`.
+- `-S`: Install `shellcheck`.
+- `-r`: Install `ripgrep`.
+- `-q`: Install QEMU.
