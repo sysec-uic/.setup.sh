@@ -27,7 +27,7 @@ curl -fsSL https://raw.githubusercontent.com/sysec-uic/.setup.sh/refs/heads/main
 ## Flags
 - `-h`, `--help`: Show help.
 - `--dry-run`: Print planned actions without making changes.
-- `-y`, `--yes`: Skip confirmation prompts.
+- `-y`, `--yes`: Skip confirmation prompts (defaults to Yes when prompted).
 - `-o`: Install `oh-my-zsh`.
 - `-v`: Install `vim`.
 - `-t`: Install `tmux`.

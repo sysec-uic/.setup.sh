@@ -25,11 +25,33 @@ install_qemu=false
 dry_run=false
 assume_yes=false
 
+# Terminal colors (fallback to no color if not supported)
+if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
+  COLOR_RED=$(tput setaf 1)
+  COLOR_GREEN=$(tput setaf 2)
+  COLOR_YELLOW=$(tput setaf 3)
+  COLOR_BLUE=$(tput setaf 4)
+  COLOR_BOLD=$(tput bold)
+  COLOR_RESET=$(tput sgr0)
+else
+  COLOR_RED=""
+  COLOR_GREEN=""
+  COLOR_YELLOW=""
+  COLOR_BLUE=""
+  COLOR_BOLD=""
+  COLOR_RESET=""
+fi
+
+info() { echo "${COLOR_BLUE}${1}${COLOR_RESET}"; }
+warn() { echo "${COLOR_YELLOW}${1}${COLOR_RESET}"; }
+success() { echo "${COLOR_GREEN}${1}${COLOR_RESET}"; }
+error() { echo "${COLOR_RED}${1}${COLOR_RESET}"; }
+
 # Function to display help information
 show_help() {
-  echo "Usage: setup.sh [options]"
+  echo "${COLOR_BOLD}Usage:${COLOR_RESET} setup.sh [options]"
   echo ""
-  echo "Options:"
+  echo "${COLOR_BOLD}Options:${COLOR_RESET}"
   echo "  -o    Install Oh My Zsh (a popular Zsh configuration framework)"
   echo "  -v    Install Vim with a basic configuration and useful plugins"
   echo "  -t    Install tmux (terminal multiplexer for session management)"
@@ -51,7 +73,7 @@ show_help() {
   echo "  --dry-run  Print actions without making changes"
   echo "  -h, --help  Display this help message"
   echo ""
-  echo "Example: setup.sh -o -v -t -g"
+  echo "${COLOR_BOLD}Example:${COLOR_RESET} setup.sh -o -v -t -g"
   echo "This will install Oh My Zsh, Vim, tmux, and Git."
 }
 
@@ -102,10 +124,13 @@ confirm_or_exit() {
   if $assume_yes; then
     return 0
   fi
-  read -rp "Proceed with selected installations? [y/N]: " confirm
+  local selected
+  selected=$(list_selected_tools)
+  echo "Selected installations:${selected}"
+  read -rp "Proceed with selected installations? [Y/n]: " confirm
   case "$confirm" in
-    [yY][eE][sS]|[yY]) return 0 ;;
-    *) echo "Aborted."; exit 1 ;;
+    ""|[yY][eE][sS]|[yY]) return 0 ;;
+    *) warn "Aborted."; exit 1 ;;
   esac
 }
 
@@ -117,13 +142,35 @@ run_cmd() {
   "$@"
 }
 
+list_selected_tools() {
+  local items=()
+  $install_ohmyzsh && items+=("oh-my-zsh")
+  $install_vim && items+=("vim")
+  $install_tmux && items+=("tmux")
+  $install_htop && items+=("htop")
+  $install_build_essential && items+=("build-essential")
+  $install_git && items+=("git")
+  $install_curl && items+=("curl")
+  $install_ag && items+=("silversearcher-ag")
+  $install_exa && items+=("exa")
+  $install_gdb && items+=("gdb")
+  $install_clang && items+=("clang")
+  $install_valgrind && items+=("valgrind")
+  $install_docker && items+=("docker")
+  $install_ncdu && items+=("ncdu")
+  $install_shellcheck && items+=("shellcheck")
+  $install_ripgrep && items+=("ripgrep")
+  $install_qemu && items+=("qemu")
+  printf " %s" "${items[@]}"
+}
+
 ensure_selection() {
   if ! $install_ohmyzsh && ! $install_vim && ! $install_tmux && ! $install_htop \
     && ! $install_build_essential && ! $install_git && ! $install_curl \
     && ! $install_ag && ! $install_exa && ! $install_gdb && ! $install_clang \
     && ! $install_valgrind && ! $install_docker && ! $install_ncdu \
     && ! $install_shellcheck && ! $install_ripgrep && ! $install_qemu; then
-    echo "No install options selected. Use -h for help."
+    warn "No install options selected. Use -h for help."
     exit 1
   fi
 }
@@ -161,11 +208,11 @@ check_password() {
 
 # Function to install Oh My Zsh
 install_oh_my_zsh() {
-  echo "Installing Oh My Zsh..."
+  info "Installing Oh My Zsh..."
   check_password  # Check password before proceeding
 
   if ! command -v zsh &> /dev/null; then
-    echo "Zsh not found, installing Zsh..."
+    info "Zsh not found, installing Zsh..."
     run_cmd sudo apt update
     run_cmd sudo apt install -y zsh
   fi
@@ -178,21 +225,21 @@ install_oh_my_zsh() {
 
 # Function to install Zsh plugins
 install_zsh_plugins() {
-  echo "Installing Zsh plugins..."
+  info "Installing Zsh plugins..."
   run_cmd git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
   run_cmd git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 }
 
 # Function to configure .zshrc for plugins
 configure_zshrc() {
-  echo "Configuring .zshrc..."
+  info "Configuring .zshrc..."
   run_cmd sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
   run_cmd sed -i 's/robbyrussell/bira/g' ~/.zshrc
 }
 
 # Function to change the default shell to Zsh
 change_default_shell_to_zsh() {
-  echo "Changing default shell to Zsh..."
+  info "Changing default shell to Zsh..."
   run_cmd sudo chsh -s "$(which zsh)" "$(whoami)"
 
   # Verify the shell change
@@ -201,19 +248,19 @@ change_default_shell_to_zsh() {
     echo "Failed to set Zsh as the default shell. Exiting."
     exit 1
   fi
-  echo "Zsh is now the default shell. Restart your terminal or run 'zsh' to start using it."
+  success "Zsh is now the default shell. Restart your terminal or run 'zsh' to start using it."
 }
 
 # Function to install Vim
 install_vim() {
-  echo "Installing Vim..."
+  info "Installing Vim..."
   run_cmd sudo apt install -y vim python3-dev cmake
   run_cmd curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
   # Backup existing .vimrc if it exists
   if [ -f "${HOME}/.vimrc" ]; then
-    echo "Backing up existing .vimrc to .vimrc.bak"
+    warn "Backing up existing .vimrc to .vimrc.bak"
     run_cmd mv "${HOME}/.vimrc" "${HOME}/.vimrc.bak"
   fi
   #cp .vimrc ~/.vimrc
@@ -227,7 +274,7 @@ install_vim() {
 }
 
 setup_gitconfig() {
-  echo "Setting up .gitconfig..."
+  info "Setting up .gitconfig..."
   if $dry_run; then
     echo "Dry run: skipping .gitconfig setup."
     return 0
@@ -238,13 +285,13 @@ setup_gitconfig() {
 
   # Check if .gitconfig.template exists locally
   if [ -f .gitconfig.template ]; then
-    echo "Using local .gitconfig.template file."
+    info "Using local .gitconfig.template file."
     TEMPLATE_SOURCE=".gitconfig.template"
   else
-    echo "Downloading .gitconfig.template from GitHub..."
+    info "Downloading .gitconfig.template from GitHub..."
     TEMPLATE_SOURCE=$(curl -fsSL "$TEMPLATE_URL")
     if [[ $? -ne 0 || -z "$TEMPLATE_SOURCE" ]]; then
-      echo "Failed to download .gitconfig.template. Exiting."
+      error "Failed to download .gitconfig.template. Exiting."
       exit 1
     fi
   fi
@@ -276,18 +323,18 @@ setup_gitconfig() {
 
   # Check for errors
   if [[ $? -ne 0 ]]; then
-    echo "Failed to set up .gitconfig. Exiting."
+    error "Failed to set up .gitconfig. Exiting."
     exit 1
   fi
 
-  echo "Git configuration set up with:"
+  success "Git configuration set up with:"
   echo "  Name: ${user_name}"
   echo "  Email: ${user_email}"
 }
 
 # Function to install Docker
 install_docker() {
-  echo "Installing Docker..."
+  info "Installing Docker..."
   check_password  # Check password before proceeding
 
   # Update package index and install prerequisites
@@ -315,12 +362,12 @@ install_docker() {
   # Add the current user to the Docker group to avoid using `sudo` with Docker commands
   run_cmd sudo usermod -aG docker "$USER"
 
-  echo "Docker installation complete! Please log out and log back in for group changes to take effect."
+  success "Docker installation complete! Please log out and log back in for group changes to take effect."
 }
 
 # Function to install QEMU
 install_qemu() {
-  echo "Installing QEMU and related packages..."
+  info "Installing QEMU and related packages..."
 
   # Update package list
   run_cmd sudo apt update
@@ -336,20 +383,20 @@ install_qemu() {
   run_cmd sudo usermod -aG libvirt "$USER"
   run_cmd sudo usermod -aG kvm "$USER"
 
-  echo "QEMU installation complete! Please log out and log back in for group changes to take effect."
+  success "QEMU installation complete! Please log out and log back in for group changes to take effect."
 }
 
 # Function to install additional tools
 install_tool() {
   local tool_name=$1
-  echo "Installing ${tool_name}..."
+  info "Installing ${tool_name}..."
   run_cmd sudo apt install -y "${tool_name}"
 }
 
 # Execute selected installations
-echo "Starting selected installations..."
+info "Starting selected installations..."
 if $dry_run; then
-  echo "Dry run enabled: no changes will be made."
+  warn "Dry run enabled: no changes will be made."
 fi
 ensure_selection
 confirm_or_exit
@@ -378,4 +425,4 @@ $install_exa && install_tool "exa"
 $install_valgrind && install_tool "valgrind"
 $install_ripgrep && install_tool "ripgrep"
 
-echo "Selected installations are complete!"
+success "Selected installations are complete!"
