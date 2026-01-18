@@ -47,9 +47,31 @@ warn() { echo "${COLOR_YELLOW}${1}${COLOR_RESET}"; }
 success() { echo "${COLOR_GREEN}${1}${COLOR_RESET}"; }
 error() { echo "${COLOR_RED}${1}${COLOR_RESET}"; }
 
+detect_distro() {
+  if [ -f /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    case "${ID}" in
+      ubuntu|debian) echo "debian" ;;
+      arch) echo "arch" ;;
+      *) echo "unsupported" ;;
+    esac
+  else
+    echo "unsupported"
+  fi
+}
+
+DISTRO=$(detect_distro)
+if [ "$DISTRO" = "unsupported" ]; then
+  error "Unsupported Linux distribution. This script supports Ubuntu/Debian and Arch Linux."
+  exit 1
+fi
+
 # Function to display help information
 show_help() {
   echo "${COLOR_BOLD}Usage:${COLOR_RESET} setup.sh [options]"
+  echo ""
+  echo "Supported distros: Ubuntu/Debian and Arch Linux"
   echo ""
   echo "${COLOR_BOLD}Options:${COLOR_RESET}"
   echo "  -o    Install Oh My Zsh (a popular Zsh configuration framework)"
@@ -142,6 +164,30 @@ run_cmd() {
   "$@"
 }
 
+pkg_update() {
+  if [ "$DISTRO" = "arch" ]; then
+    if $assume_yes; then
+      run_cmd sudo pacman -Syu --noconfirm
+    else
+      run_cmd sudo pacman -Syu
+    fi
+  else
+    run_cmd sudo apt update
+  fi
+}
+
+pkg_install() {
+  if [ "$DISTRO" = "arch" ]; then
+    if $assume_yes; then
+      run_cmd sudo pacman -S --needed --noconfirm "$@"
+    else
+      run_cmd sudo pacman -S --needed "$@"
+    fi
+  else
+    run_cmd sudo apt install -y "$@"
+  fi
+}
+
 list_selected_tools() {
   local items=()
   $install_ohmyzsh && items+=("oh-my-zsh")
@@ -181,6 +227,10 @@ check_password() {
         echo "Dry run: skipping password checks."
         return 0
     fi
+    if ! passwd --status "$(whoami)" >/dev/null 2>&1; then
+        warn "Password status check not supported; skipping."
+        return 0
+    fi
     # Get the status of the current user's password
     USER_STATUS=$(passwd --status "$(whoami)" | awk '{print $2}')
 
@@ -213,8 +263,8 @@ install_oh_my_zsh() {
 
   if ! command -v zsh &> /dev/null; then
     info "Zsh not found, installing Zsh..."
-    run_cmd sudo apt update
-    run_cmd sudo apt install -y zsh
+    pkg_update
+    pkg_install zsh
   fi
   if $dry_run; then
     echo "+ curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh -s -- --unattended"
@@ -254,7 +304,11 @@ change_default_shell_to_zsh() {
 # Function to install Vim
 install_vim() {
   info "Installing Vim..."
-  run_cmd sudo apt install -y vim python3-dev cmake
+  if [ "$DISTRO" = "arch" ]; then
+    pkg_install vim python cmake
+  else
+    pkg_install vim python3-dev cmake
+  fi
   run_cmd curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
@@ -337,27 +391,33 @@ install_docker() {
   info "Installing Docker..."
   check_password  # Check password before proceeding
 
-  # Update package index and install prerequisites
-  run_cmd sudo apt update
-  run_cmd sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-
-  # Add Docker’s official GPG key
-  if $dry_run; then
-    echo "+ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+  if [ "$DISTRO" = "arch" ]; then
+    pkg_update
+    pkg_install docker
+    run_cmd sudo systemctl enable --now docker
   else
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-  fi
+    # Update package index and install prerequisites
+    pkg_update
+    run_cmd sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 
-  # Set up the stable repository
-  if $dry_run; then
-    echo "+ echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list"
-  else
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  fi
+    # Add Docker’s official GPG key
+    if $dry_run; then
+      echo "+ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+    else
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    fi
 
-  # Update the package index again and install Docker
-  run_cmd sudo apt update
-  run_cmd sudo apt install -y docker-ce docker-ce-cli containerd.io
+    # Set up the stable repository
+    if $dry_run; then
+      echo "+ echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list"
+    else
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    fi
+
+    # Update the package index again and install Docker
+    pkg_update
+    run_cmd sudo apt install -y docker-ce docker-ce-cli containerd.io
+  fi
 
   # Add the current user to the Docker group to avoid using `sudo` with Docker commands
   run_cmd sudo usermod -aG docker "$USER"
@@ -370,10 +430,14 @@ install_qemu() {
   info "Installing QEMU and related packages..."
 
   # Update package list
-  run_cmd sudo apt update
+  pkg_update
   
   # Install QEMU and virtualization tools
-  run_cmd sudo apt install -y qemu qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+  if [ "$DISTRO" = "arch" ]; then
+    pkg_install qemu libvirt virt-manager bridge-utils
+  else
+    pkg_install qemu qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+  fi
 
   # Enable and start the libvirtd service for managing virtual machines
   run_cmd sudo systemctl enable libvirtd
@@ -389,8 +453,18 @@ install_qemu() {
 # Function to install additional tools
 install_tool() {
   local tool_name=$1
-  info "Installing ${tool_name}..."
-  run_cmd sudo apt install -y "${tool_name}"
+  local package_name=$tool_name
+
+  if [ "$DISTRO" = "arch" ]; then
+    case "$tool_name" in
+      build-essential) package_name="base-devel" ;;
+      silversearcher-ag) package_name="the_silver_searcher" ;;
+      exa) package_name="eza" ;;
+    esac
+  fi
+
+  info "Installing ${package_name}..."
+  pkg_install "${package_name}"
 }
 
 # Execute selected installations
