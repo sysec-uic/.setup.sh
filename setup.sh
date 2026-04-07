@@ -21,6 +21,7 @@ install_ncdu=false
 install_shellcheck=false
 install_ripgrep=false
 install_qemu=false
+install_nvidia=false
 dry_run=false
 assume_yes=false
 
@@ -93,6 +94,7 @@ show_help() {
   echo "  -S    Install ${COLOR_GREEN}ShellCheck${COLOR_RESET} (linter for shell scripts)"
   echo "  -r    Install ${COLOR_GREEN}ripgrep (rg)${COLOR_RESET} (fast file search tool)"
   echo "  -q    Install ${COLOR_GREEN}QEMU${COLOR_RESET} (system virtualization)"
+  echo "  -N    Install ${COLOR_GREEN}NVIDIA & CUDA${COLOR_RESET} (drivers and toolkit for GPU computing)"
   echo "  -y, --yes  Skip confirmation prompts"
   echo "  --dry-run  Print actions without making changes"
   echo "  -h, --help  Display this help message"
@@ -102,7 +104,7 @@ show_help() {
 }
 
 # Parse options
-while getopts "ovtbgHsxGCVDnSrqyh-:" opt; do
+while getopts "ovtbgHsxGCVDnSrqNyh-:" opt; do
   case ${opt} in
     o ) install_ohmyzsh=true ;;
     v ) install_vim=true ;;
@@ -124,6 +126,7 @@ while getopts "ovtbgHsxGCVDnSrqyh-:" opt; do
     S ) install_shellcheck=true ;;
     r ) install_ripgrep=true ;;
     q ) install_qemu=true ;;
+    N ) install_nvidia=true ;;
     y ) assume_yes=true ;;
     - ) 
       if [[ "$OPTARG" == "help" ]]; then
@@ -211,6 +214,7 @@ list_selected_tools() {
   $install_shellcheck && items+=("shellcheck")
   $install_ripgrep && items+=("ripgrep")
   $install_qemu && items+=("qemu")
+  $install_nvidia && items+=("nvidia-cuda")
   printf " %s" "${items[@]}"
 }
 
@@ -219,7 +223,8 @@ ensure_selection() {
     && ! $install_build_essential && ! $install_git \
     && ! $install_ag && ! $install_exa && ! $install_gdb && ! $install_clang \
     && ! $install_valgrind && ! $install_docker && ! $install_ncdu \
-    && ! $install_shellcheck && ! $install_ripgrep && ! $install_qemu; then
+    && ! $install_shellcheck && ! $install_ripgrep && ! $install_qemu \
+    && ! $install_nvidia; then
     warn "No install options selected. Use -h for help."
     exit 1
   fi
@@ -479,6 +484,24 @@ install_qemu() {
   success "QEMU installation complete! Please log out and log back in for group changes to take effect."
 }
 
+# Function to install NVIDIA drivers and CUDA
+install_nvidia_cuda() {
+  info "Installing NVIDIA drivers and CUDA toolkit..."
+  check_password
+
+  if [ "$DISTRO" = "arch" ]; then
+    pkg_update
+    pkg_install nvidia nvidia-utils cuda base-devel
+  else
+    pkg_update
+    pkg_install ubuntu-drivers-common
+    run_cmd sudo ubuntu-drivers autoinstall
+    pkg_install nvidia-cuda-toolkit
+  fi
+
+  success "NVIDIA drivers and CUDA installation complete! A reboot is highly recommended."
+}
+
 # Function to install additional tools
 install_tool() {
   local tool_name=$1
@@ -514,6 +537,7 @@ fi
 $install_vim && install_vim
 $install_docker && install_docker
 $install_qemu && install_qemu
+$install_nvidia && install_nvidia_cuda
 
 $install_tmux && install_tool "tmux"
 $install_htop && install_tool "htop"
