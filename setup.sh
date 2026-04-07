@@ -502,6 +502,36 @@ install_nvidia_cuda() {
   success "NVIDIA drivers and CUDA installation complete! A reboot is highly recommended."
 }
 
+# Function to configure NVIDIA Container Toolkit
+install_nvidia_docker_toolkit() {
+  info "Configuring NVIDIA Container Toolkit for Docker..."
+  if [ "$DISTRO" = "arch" ]; then
+    pkg_update
+    pkg_install nvidia-container-toolkit
+  else
+    if $dry_run; then
+      echo "+ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
+      echo "+ curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list"
+    else
+      curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+        sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+    fi
+    pkg_update
+    pkg_install nvidia-container-toolkit
+  fi
+
+  if $dry_run; then
+    echo "+ sudo nvidia-ctk runtime configure --runtime=docker"
+    echo "+ sudo systemctl restart docker"
+  else
+    run_cmd sudo nvidia-ctk runtime configure --runtime=docker
+    run_cmd sudo systemctl restart docker
+  fi
+  success "NVIDIA Container Toolkit is configured!"
+}
+
 # Function to install additional tools
 install_tool() {
   local tool_name=$1
@@ -538,6 +568,11 @@ $install_vim && install_vim
 $install_docker && install_docker
 $install_qemu && install_qemu
 $install_nvidia && install_nvidia_cuda
+
+# Link NVIDIA and Docker if both are present and at least one was requested
+if { $install_nvidia || $install_docker; } && { $install_nvidia || command -v nvidia-smi >/dev/null 2>&1; } && { $install_docker || command -v docker >/dev/null 2>&1; }; then
+  install_nvidia_docker_toolkit
+fi
 
 $install_tmux && install_tool "tmux"
 $install_htop && install_tool "htop"
